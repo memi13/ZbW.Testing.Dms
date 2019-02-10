@@ -1,4 +1,12 @@
-﻿namespace ZbW.Testing.Dms.Client.ViewModels
+﻿using System.Configuration;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Xml;
+using System.Xml.Serialization;
+using ZbW.Testing.Dms.Client.Model;
+
+namespace ZbW.Testing.Dms.Client.ViewModels
 {
     using System;
     using System.Collections.Generic;
@@ -31,6 +39,7 @@
         private List<string> _typItems;
 
         private DateTime? _valutaDatum;
+        private string memoryPath;
 
         public DocumentDetailViewModel(string benutzer, Action navigateBack)
         {
@@ -41,6 +50,8 @@
 
             CmdDurchsuchen = new DelegateCommand(OnCmdDurchsuchen);
             CmdSpeichern = new DelegateCommand(OnCmdSpeichern);
+            memoryPath = ConfigurationManager.AppSettings["RepositoryDir"];
+            CreatePhatIfNotExist(memoryPath);
         }
 
         public string Stichwoerter
@@ -165,8 +176,147 @@
         private void OnCmdSpeichern()
         {
             // TODO: Add your Code here
+            if
+                (
+                    !BezeichungIsValid() || !SelectedTypItemIsValid() || !ValutaDatumIsValid()
+                )
+            {
+                showMessageBox("Es müssen alle Pflichtfelder ausgefüllt werden!", "Information");
+            }
+            else
+            {
+                if (FilePhatHasValue())
+                {
+                    CopyTo();
+                    if (IsRemoveFileEnabled)
+                    {
+                        File.Delete(_filePath);
+                    }
+                    _navigateBack();
+                }
+                else
+                {
+                    showMessageBox("Keine Datei ausgwählt", "Information");
+                }
+            }
 
-            _navigateBack();
+
         }
+
+        public bool BezeichungIsValid()
+        {
+            return Bezeichnung?.Length > 0;
+        }
+
+        public bool SelectedTypItemIsValid()
+        {
+            return SelectedTypItem?.Length > 0;
+        }
+
+        public bool ValutaDatumIsValid()
+        {
+            return ValutaDatum != null;
+        }
+
+        public void showMessageBox(string text, string titel)
+        {
+            MessageBox.Show(text, text, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        public bool FilePhatHasValue()
+        {
+            return _filePath?.Length > 0;
+        }
+
+        public void CopyTo()
+        {
+            var year = ValutaDatum.Value.Year;
+            CreatePhatIfNotExist(memoryPath + "\\" + year);
+            var xml= CreareXMl(CreateMeatInfo());
+            var Guid = System.Guid.NewGuid();
+            var newPhate = memoryPath + "\\" + year + "\\" + Guid;
+            using (File.Create(newPhate + "_Metadata.xml")) ;
+
+            using (TextWriter tw = new StreamWriter(newPhate + "_Metadata.xml"))
+            {
+                tw.WriteLine(xml);
+                tw.Close();
+            }
+           
+           
+            File.Copy(_filePath, newPhate+ "_Content."+_filePath.Split().Last().Split('.').Last());
+        }
+
+        private bool CreatePhatIfNotExist(string phat)
+        {
+            if (CheckPathExist(phat))
+                return true;
+            else
+            {
+                var phatParts = phat.Split('\\');
+                var phateComplit = false;
+                var counter = 0;
+                while (!phateComplit)
+                {
+                    var newphate = string.Empty;
+                    for (int i = 0; i < counter + 1; i++)
+                    {
+                        newphate = newphate + phatParts[i] + "\\";
+                    }
+
+                    if (!CheckPathExist(newphate))
+                    {
+                        System.IO.Directory.CreateDirectory(newphate);
+                    }
+                    counter++;
+
+                    phateComplit = CheckPathExist(phat);
+                }
+                return true;
+            }
+
+        }
+        public bool CheckPathExist(string phat)
+        {
+            return Directory.Exists(phat);
+        }
+
+        public MetadataItem CreateMeatInfo()
+        {
+            var meta = new MetadataItem();
+
+            meta.ValueDate = (DateTime)ValutaDatum;
+            meta.FileName = _filePath.Split('\\').Last();
+            meta.Type = SelectedTypItem;
+            meta.Keywords = new List<string>();
+            if (Stichwoerter != null)
+                if (Stichwoerter.Contains(','))
+                    meta.Keywords = Stichwoerter.Split(',').ToList();
+                else
+                {
+                    meta.Keywords.Add(Stichwoerter);
+                }
+            meta.User = Benutzer;
+            meta.CreareDate = Erfassungsdatum;
+            return meta;
+        }
+
+        public string CreareXMl(MetadataItem meta)
+        {
+            XmlSerializer xsSubmit = new XmlSerializer(typeof(MetadataItem));
+            var subReq = meta;
+            var xml = "";
+
+            using (var sww = new StringWriter())
+            {
+                using (XmlWriter writer = XmlWriter.Create(sww))
+                {
+                    xsSubmit.Serialize(writer, subReq);
+                     xml = sww.ToString(); // Your XML
+                    return xml;
+                }
+            }
+        }
+
     }
 }
