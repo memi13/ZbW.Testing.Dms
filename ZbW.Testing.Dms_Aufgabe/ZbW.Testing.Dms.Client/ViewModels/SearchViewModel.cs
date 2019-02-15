@@ -1,4 +1,9 @@
-﻿namespace ZbW.Testing.Dms.Client.ViewModels
+﻿using System.Configuration;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+
+namespace ZbW.Testing.Dms.Client.ViewModels
 {
     using System.Collections.Generic;
 
@@ -19,6 +24,9 @@
         private string _suchbegriff;
 
         private List<string> _typItems;
+        private string memoryPath;
+
+
 
         public SearchViewModel()
         {
@@ -27,6 +35,7 @@
             CmdSuchen = new DelegateCommand(OnCmdSuchen);
             CmdReset = new DelegateCommand(OnCmdReset);
             CmdOeffnen = new DelegateCommand(OnCmdOeffnen, OnCanCmdOeffnen);
+            memoryPath = ConfigurationManager.AppSettings["RepositoryDir"];
         }
 
         public DelegateCommand CmdOeffnen { get; }
@@ -111,16 +120,83 @@
         private void OnCmdOeffnen()
         {
             // TODO: Add your Code here
+            var phate = memoryPath + "\\" + SelectedMetadataItem.ValueDate.Year + "\\" + SelectedMetadataItem.Guid+ "_Content."+SelectedMetadataItem.FileName.Split('.').Last();
+            Process.Start(phate);
         }
 
         private void OnCmdSuchen()
         {
-            // TODO: Add your Code here
+            Search();
+        }
+
+        private void Search()
+        {
+            FilteredMetadataItems = new List<MetadataItem>();
+            var directories = Directory.GetDirectories(memoryPath);
+            var result = new List<MetadataItem>();
+            foreach (var dict in directories)
+            {
+                DirectoryInfo d = new DirectoryInfo(dict);//Assuming Test is your Folder
+                FileInfo[] Files = d.GetFiles("*.xml");
+                foreach (var file in Files)
+                {
+                    var data = MetadataItem.Deserialize(file.FullName);
+                    if (isOk(data))
+                    {
+                        result.Add(data);
+                        //FilteredMetadataItems.Add(data);
+                    }
+
+                }
+            }
+
+            FilteredMetadataItems = result;
+        }
+
+        public bool isOk(MetadataItem item)
+        {
+            if (
+                (
+                    (Suchbegriff!=null && Suchbegriff.Length>=1 && SelectedTypItem==null) 
+                    &&
+                    (
+                        (item.FileName != null &&item.FileName.Contains(Suchbegriff)) || 
+                        (item.Designation!=null && item.Designation.Contains(Suchbegriff))
+                     )
+                )
+                ||
+                (
+                    string.IsNullOrEmpty(Suchbegriff) && SelectedTypItem!=null &&SelectedTypItem==item.Type
+                )
+                ||
+                (
+                    (Suchbegriff != null && Suchbegriff.Length >= 1 && SelectedTypItem != null)
+                    &&
+                    (
+                        (item.FileName != null && item.FileName.Contains(Suchbegriff) && SelectedTypItem == item.Type) ||
+                        (item.Designation != null && item.Designation.Contains(Suchbegriff) && SelectedTypItem == item.Type)
+                    )
+                )
+                )
+
+                return true;
+            else if(item.Keywords!=null)
+            {
+                foreach (var keyW in item.Keywords)
+                {
+                    if (keyW.Contains(Suchbegriff))
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         private void OnCmdReset()
         {
-            // TODO: Add your Code here
+            FilteredMetadataItems = new List<MetadataItem>();
+            Suchbegriff = string.Empty;
+            SelectedTypItem = null;
         }
     }
 }

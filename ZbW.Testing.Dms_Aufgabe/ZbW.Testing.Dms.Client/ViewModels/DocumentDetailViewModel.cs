@@ -231,9 +231,10 @@ namespace ZbW.Testing.Dms.Client.ViewModels
         public void CopyTo()
         {
             var year = ValutaDatum.Value.Year;
-            CreatePhatIfNotExist(memoryPath + "\\" + year);
-            var xml= CreareXMl(CreateMeatInfo());
             var Guid = System.Guid.NewGuid();
+            CreatePhatIfNotExist(memoryPath + "\\" + year);
+            var xml= MetadataItem.Seralize(CreateMeatInfo(Guid.ToString()));
+           
             var newPhate = memoryPath + "\\" + year + "\\" + Guid;
             using (File.Create(newPhate + "_Metadata.xml")) ;
 
@@ -281,14 +282,15 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             return Directory.Exists(phat);
         }
 
-        public MetadataItem CreateMeatInfo()
+        public MetadataItem CreateMeatInfo(string id)
         {
             var meta = new MetadataItem();
-
+            meta.Guid = id;
             meta.ValueDate = (DateTime)ValutaDatum;
             meta.FileName = _filePath.Split('\\').Last();
             meta.Type = SelectedTypItem;
             meta.Keywords = new List<string>();
+            meta.Designation = Bezeichnung;
             if (Stichwoerter != null)
                 if (Stichwoerter.Contains(','))
                     meta.Keywords = Stichwoerter.Split(',').ToList();
