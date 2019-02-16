@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using ZbW.Testing.Dms.Client.Services;
 
 namespace ZbW.Testing.Dms.Client.ViewModels
 {
@@ -26,7 +27,7 @@ namespace ZbW.Testing.Dms.Client.ViewModels
         private List<string> _typItems;
         private string memoryPath;
 
-
+        private FileServices fileServices;
 
         public SearchViewModel()
         {
@@ -36,6 +37,7 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             CmdReset = new DelegateCommand(OnCmdReset);
             CmdOeffnen = new DelegateCommand(OnCmdOeffnen, OnCanCmdOeffnen);
             memoryPath = ConfigurationManager.AppSettings["RepositoryDir"];
+            fileServices=new FileServices();
         }
 
         public DelegateCommand CmdOeffnen { get; }
@@ -120,8 +122,8 @@ namespace ZbW.Testing.Dms.Client.ViewModels
         private void OnCmdOeffnen()
         {
             // TODO: Add your Code here
-            var phate = memoryPath + "\\" + SelectedMetadataItem.ValueDate.Year + "\\" + SelectedMetadataItem.Guid+ "_Content."+SelectedMetadataItem.FileName.Split('.').Last();
-            Process.Start(phate);
+            var phate = memoryPath + "\\" + SelectedMetadataItem.ValueDate.Year + "\\" + SelectedMetadataItem.Guid + "_Content." + SelectedMetadataItem.FileName.Split('.').Last();
+            fileServices.OpenFile(phate);
         }
 
         private void OnCmdSuchen()
@@ -141,56 +143,98 @@ namespace ZbW.Testing.Dms.Client.ViewModels
                 foreach (var file in Files)
                 {
                     var data = MetadataItem.Deserialize(file.FullName);
-                    if (isOk(data))
+                    if (FileIsOk(data))
                     {
                         result.Add(data);
-                        //FilteredMetadataItems.Add(data);
                     }
-
                 }
             }
 
             FilteredMetadataItems = result;
         }
 
-        public bool isOk(MetadataItem item)
+        public bool FileIsOk(MetadataItem item)
         {
             if (
                 (
-                    (Suchbegriff!=null && Suchbegriff.Length>=1 && SelectedTypItem==null) 
+                    (SuchbegriffHasValueAndSelectedTypItemHasNoValue())
                     &&
                     (
-                        (item.FileName != null &&item.FileName.Contains(Suchbegriff)) || 
-                        (item.Designation!=null && item.Designation.Contains(Suchbegriff))
-                     )
-                )
-                ||
-                (
-                    string.IsNullOrEmpty(Suchbegriff) && SelectedTypItem!=null &&SelectedTypItem==item.Type
-                )
-                ||
-                (
-                    (Suchbegriff != null && Suchbegriff.Length >= 1 && SelectedTypItem != null)
-                    &&
-                    (
-                        (item.FileName != null && item.FileName.Contains(Suchbegriff) && SelectedTypItem == item.Type) ||
-                        (item.Designation != null && item.Designation.Contains(Suchbegriff) && SelectedTypItem == item.Type)
+                        (item.FileName != null && item.FileName.Contains(Suchbegriff)) ||
+                        (item.Designation != null && item.Designation.Contains(Suchbegriff))
                     )
                 )
+                ||
+                (
+                    (SuchbegriffHasNoValueAndSelectedTypItemHasValue())
+                    && (SelectedTypItem == item.Type)
                 )
-
+                ||
+                (
+                    (SuchbegriffAndSelectedTypItemHasValue())
+                    &&
+                    (
+                        (item.FileName != null && item.FileName.Contains(Suchbegriff) &&
+                         SelectedTypItem == item.Type) ||
+                        (item.Designation != null && item.Designation.Contains(Suchbegriff) &&
+                         SelectedTypItem == item.Type)
+                    )
+                )
+            )
+            {
                 return true;
-            else if(item.Keywords!=null)
+            }
+            else if (item.Keywords != null)
             {
                 foreach (var keyW in item.Keywords)
                 {
-                    if (keyW.Contains(Suchbegriff))
+                    if
+                    (
+                        (
+                            (SuchbegriffHasValueAndSelectedTypItemHasNoValue())
+                            &&
+                            keyW.Contains(Suchbegriff)
+                        )
+                       
+                        ||
+                        (
+                            (SuchbegriffAndSelectedTypItemHasValue())
+                            &&
+                            (keyW.Contains(Suchbegriff) && SelectedTypItem == item.Type)
+                        )
+                    )
+                    {
                         return true;
+                    }
+
                 }
             }
 
             return false;
         }
+
+        private bool SuchbegriffHasValue()
+        {
+            return Suchbegriff != null && Suchbegriff.Length >= 1;
+        }
+        private bool SelectedTypItemHasValue()
+        {
+            return SelectedTypItem != null;
+        }
+
+        private bool SuchbegriffHasValueAndSelectedTypItemHasNoValue()
+        {
+            return SuchbegriffHasValue() && !SelectedTypItemHasValue();
+        }
+        private bool SuchbegriffHasNoValueAndSelectedTypItemHasValue()
+        {
+            return !SuchbegriffHasValue() && SelectedTypItemHasValue();
+        }
+        private bool SuchbegriffAndSelectedTypItemHasValue()
+        {
+            return SuchbegriffHasValue() && SelectedTypItemHasValue();
+        }
+
 
         private void OnCmdReset()
         {

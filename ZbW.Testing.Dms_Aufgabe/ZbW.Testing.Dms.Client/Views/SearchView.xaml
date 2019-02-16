@@ -40,10 +40,14 @@
                   ItemsSource="{Binding FilteredMetadataItems}"
                   SelectedItem="{Binding SelectedMetadataItem}"
                   AutoGenerateColumns="False">
-            <!--TODO: Remove AutoGenerateColumns="True" and specify your own columns -->
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Typ" Binding="{Binding Typ}"/>
                 <DataGridTextColumn Header="Bezeichnung" Binding="{Binding Designation}"/>
+                <DataGridTextColumn Header="Datei name" Binding="{Binding FileName}"/>
+                <DataGridTextColumn Header="Benutzer" Binding="{Binding User}"/>
+                <DataGridTextColumn Header="Erstell Datum" Binding="{Binding CreareDate}"/>
+                <DataGridTextColumn Header="Dokument Datum" Binding="{Binding ValueDate}"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding Type}"/>
+                <DataGridTextColumn Header="KeyWorts" Binding="{Binding KeywortsAsString}"/>
             </DataGrid.Columns>
         </DataGrid>
 

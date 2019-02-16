@@ -18,6 +18,21 @@ namespace ZbW.Testing.Dms.Client.Model
         public string Designation { get; set; }
         public  String Type { get; set; }
         public  List<String> Keywords { get; set; }
+
+        public string KeywortsAsString
+        {
+            get
+            {
+                var r = string.Empty;
+                foreach (var item in Keywords)
+                {
+                    r += item+", ";
+                }
+                return r; 
+
+            }
+
+        }
         public static MetadataItem Deserialize(string path)
         {
             
@@ -25,18 +40,13 @@ namespace ZbW.Testing.Dms.Client.Model
                 StreamReader reader = new StreamReader(path);
                 var metadataItem = (MetadataItem)serializer.Deserialize(reader);
                 reader.Close();
-
                 return metadataItem;
-            
-
-
         }
         public static String Seralize(MetadataItem metadataItem)
         {
             XmlSerializer xmlserializer = new XmlSerializer(typeof(MetadataItem));
             StringWriter stringWriter = new StringWriter();
             XmlWriter writer = XmlWriter.Create(stringWriter);
-
             xmlserializer.Serialize(writer, metadataItem);
             var serializeXml = stringWriter.ToString();
             writer.Close();

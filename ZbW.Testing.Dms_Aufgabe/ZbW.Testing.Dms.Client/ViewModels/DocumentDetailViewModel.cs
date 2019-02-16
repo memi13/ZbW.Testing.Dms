@@ -5,6 +5,7 @@ using System.Windows;
 using System.Xml;
 using System.Xml.Serialization;
 using ZbW.Testing.Dms.Client.Model;
+using ZbW.Testing.Dms.Client.Services;
 
 namespace ZbW.Testing.Dms.Client.ViewModels
 {
@@ -40,6 +41,7 @@ namespace ZbW.Testing.Dms.Client.ViewModels
 
         private DateTime? _valutaDatum;
         private string memoryPath;
+        public FileServices FileServices;
 
         public DocumentDetailViewModel(string benutzer, Action navigateBack)
         {
@@ -52,6 +54,7 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             CmdSpeichern = new DelegateCommand(OnCmdSpeichern);
             memoryPath = ConfigurationManager.AppSettings["RepositoryDir"];
             CreatePhatIfNotExist(memoryPath);
+            FileServices = new FileServices();
         }
 
         public string Stichwoerter
@@ -185,9 +188,9 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             }
             else
             {
-                if (FilePhatHasValue())
+                if (FileChosen())
                 {
-                    CopyTo();
+                    MemoryFiles();
                     if (IsRemoveFileEnabled)
                     {
                         File.Delete(_filePath);
@@ -223,63 +226,20 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             MessageBox.Show(text, text, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        public bool FilePhatHasValue()
+        public bool FileChosen()
         {
             return _filePath?.Length > 0;
         }
 
-        public void CopyTo()
+        public void MemoryFiles()
         {
             var year = ValutaDatum.Value.Year;
             var Guid = System.Guid.NewGuid();
-            CreatePhatIfNotExist(memoryPath + "\\" + year);
-            var xml= MetadataItem.Seralize(CreateMeatInfo(Guid.ToString()));
-           
             var newPhate = memoryPath + "\\" + year + "\\" + Guid;
-            using (File.Create(newPhate + "_Metadata.xml")) ;
+            FileServices.CreatePhatIfNotExist(memoryPath + "\\" + year);
 
-            using (TextWriter tw = new StreamWriter(newPhate + "_Metadata.xml"))
-            {
-                tw.WriteLine(xml);
-                tw.Close();
-            }
-           
-           
-            File.Copy(_filePath, newPhate+ "_Content."+_filePath.Split().Last().Split('.').Last());
-        }
-
-        private bool CreatePhatIfNotExist(string phat)
-        {
-            if (CheckPathExist(phat))
-                return true;
-            else
-            {
-                var phatParts = phat.Split('\\');
-                var phateComplit = false;
-                var counter = 0;
-                while (!phateComplit)
-                {
-                    var newphate = string.Empty;
-                    for (int i = 0; i < counter + 1; i++)
-                    {
-                        newphate = newphate + phatParts[i] + "\\";
-                    }
-
-                    if (!CheckPathExist(newphate))
-                    {
-                        System.IO.Directory.CreateDirectory(newphate);
-                    }
-                    counter++;
-
-                    phateComplit = CheckPathExist(phat);
-                }
-                return true;
-            }
-
-        }
-        public bool CheckPathExist(string phat)
-        {
-            return Directory.Exists(phat);
+            FileServices.GeneratXMl(newPhate, CreateMeatInfo(Guid.ToString()));
+            FileServices.CopyTo(_filePath, newPhate + "_Content." + _filePath.Split().Last().Split('.').Last());
         }
 
         public MetadataItem CreateMeatInfo(string id)
@@ -298,27 +258,10 @@ namespace ZbW.Testing.Dms.Client.ViewModels
                 {
                     meta.Keywords.Add(Stichwoerter);
                 }
+
             meta.User = Benutzer;
             meta.CreareDate = Erfassungsdatum;
             return meta;
         }
-
-        public string CreareXMl(MetadataItem meta)
-        {
-            XmlSerializer xsSubmit = new XmlSerializer(typeof(MetadataItem));
-            var subReq = meta;
-            var xml = "";
-
-            using (var sww = new StringWriter())
-            {
-                using (XmlWriter writer = XmlWriter.Create(sww))
-                {
-                    xsSubmit.Serialize(writer, subReq);
-                     xml = sww.ToString(); // Your XML
-                    return xml;
-                }
-            }
-        }
-
     }
 }
