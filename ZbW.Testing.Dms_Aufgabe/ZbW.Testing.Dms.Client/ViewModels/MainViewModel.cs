@@ -7,7 +7,7 @@
 
     using ZbW.Testing.Dms.Client.Views;
 
-    internal class MainViewModel : BindableBase
+    public class MainViewModel : BindableBase
     {
         private string _benutzer;
 

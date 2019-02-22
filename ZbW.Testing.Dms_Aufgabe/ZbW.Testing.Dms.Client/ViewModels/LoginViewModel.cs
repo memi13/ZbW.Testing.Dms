@@ -7,7 +7,7 @@
 
     using ZbW.Testing.Dms.Client.Views;
 
-    internal class LoginViewModel : BindableBase
+    public class LoginViewModel : BindableBase
     {
         private readonly LoginView _loginView;
 
@@ -63,5 +63,6 @@
 
             _loginView.Close();
         }
+
     }
 }

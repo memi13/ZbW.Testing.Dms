@@ -19,7 +19,7 @@ namespace ZbW.Testing.Dms.Client.ViewModels
 
     using ZbW.Testing.Dms.Client.Repositories;
 
-    internal class DocumentDetailViewModel : BindableBase
+    public class DocumentDetailViewModel : BindableBase
     {
         private readonly Action _navigateBack;
 
@@ -53,8 +53,10 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             CmdDurchsuchen = new DelegateCommand(OnCmdDurchsuchen);
             CmdSpeichern = new DelegateCommand(OnCmdSpeichern);
             memoryPath = ConfigurationManager.AppSettings["RepositoryDir"];
-            CreatePhatIfNotExist(memoryPath);
+           
             FileServices = new FileServices();
+
+            FileServices.CreatePhatIfNotExist(memoryPath);
         }
 
         public string Stichwoerter
@@ -237,7 +239,6 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             var Guid = System.Guid.NewGuid();
             var newPhate = memoryPath + "\\" + year + "\\" + Guid;
             FileServices.CreatePhatIfNotExist(memoryPath + "\\" + year);
-
             FileServices.GeneratXMl(newPhate, CreateMeatInfo(Guid.ToString()));
             FileServices.CopyTo(_filePath, newPhate + "_Content." + _filePath.Split().Last().Split('.').Last());
         }
