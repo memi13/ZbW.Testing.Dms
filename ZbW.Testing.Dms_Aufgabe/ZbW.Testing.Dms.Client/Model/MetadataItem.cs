@@ -19,7 +19,7 @@ namespace ZbW.Testing.Dms.Client.Model
         public  String Type { get; set; }
         public  List<String> Keywords { get; set; }
 
-        private string KeywortsAsString
+        public string KeywortsAsString
         {
             get
             {

@@ -56,6 +56,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DocumentDetailViewModelUnitTest.cs" />
     <Compile Include="LoginTest.cs" />
     <Compile Include="MainViewTests.cs" />
     <Compile Include="MetadateItemTest.cs" />

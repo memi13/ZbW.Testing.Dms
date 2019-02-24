@@ -43,6 +43,10 @@ namespace ZbW.Testing.Dms.Client.ViewModels
         private string memoryPath;
         public FileServices FileServices;
 
+        public DocumentDetailViewModel()
+        {
+
+        }
         public DocumentDetailViewModel(string benutzer, Action navigateBack)
         {
             _navigateBack = navigateBack;
@@ -71,7 +75,6 @@ namespace ZbW.Testing.Dms.Client.ViewModels
                 SetProperty(ref _stichwoerter, value);
             }
         }
-
         public string Bezeichnung
         {
             get

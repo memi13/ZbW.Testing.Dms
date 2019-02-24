@@ -107,9 +107,32 @@ namespace ZbW.Testing.Dms.UnitTest
             //assert
             Assert.That(r.Count, Is.EqualTo(1));
         }
+        [Test]
+        public void KesWortasString_check_empty()
+        {
+            //arrange
+            var meta = new MetadataItem();
+            meta.Keywords = new List<string>();
+            //act
+            var r = meta.KeywortsAsString;
+            //assert
+            Assert.That(r, Is.Empty);
+        }
+        [Test]
+        public void KesWortasString_check_halloDu()
+        {
+            //arrange
+            var meta = new MetadataItem();
+            meta.Keywords = new List<string>();
+            meta.Keywords.Add("Hallo");
+            meta.Keywords.Add("du");
+            //act
+            var r = meta.KeywortsAsString;
+            //assert
+            Assert.That(r, Is.EqualTo("Hallo, du, "));
+        }
+        
 
-        /*
-         * public  List<String> Keywords { get; set; }
-         * */
+
     }
 }

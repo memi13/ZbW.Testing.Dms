@@ -37,7 +37,7 @@ namespace ZbW.Testing.Dms.Client.ViewModels
             CmdReset = new DelegateCommand(OnCmdReset);
             CmdOeffnen = new DelegateCommand(OnCmdOeffnen, OnCanCmdOeffnen);
             memoryPath = ConfigurationManager.AppSettings["RepositoryDir"];
-            fileServices=new FileServices();
+            fileServices = new FileServices();
         }
 
         public DelegateCommand CmdOeffnen { get; }
@@ -58,7 +58,6 @@ namespace ZbW.Testing.Dms.Client.ViewModels
                 SetProperty(ref _suchbegriff, value);
             }
         }
-
         public List<string> TypItems
         {
             get
@@ -195,7 +194,7 @@ namespace ZbW.Testing.Dms.Client.ViewModels
                             &&
                             keyW.Contains(Suchbegriff)
                         )
-                       
+
                         ||
                         (
                             (SuchbegriffAndSelectedTypItemHasValue())
